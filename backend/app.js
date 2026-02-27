@@ -4,6 +4,8 @@ const cors = require("cors");
 
 const authRoutes = require("./routes/authRoutes");
 const testRoutes = require("./routes/testRoutes");
+const projectRoutes = require("./routes/projectRoutes");
+const taskRoutes = require("./routes/taskRoutes");
 
 const app = express();
 
@@ -12,13 +14,11 @@ app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/role", testRoutes);
+app.use("/api/projects", projectRoutes);
+app.use("/api/tasks", taskRoutes);
 
 app.get("/", (req, res) => {
     res.send("TeamLens app is Running");
 })
-app.use((err, req, res, next) => {
-  console.error("GLOBAL ERROR:", err.message);
-  res.status(500).json({ error: err.message });
-});
 
 module.exports = app;
