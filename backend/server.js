@@ -13,9 +13,19 @@ const io = new Server(server, {
         origin: "*"
     }
 });
+app.set("io", io);
 
 io.on("connection", (socket) => {
     console.log("User connected", socket.id);
+
+    socket.on("joinProject", (projectId) => {
+        socket.join(projectId);
+        console.log("Joined project", projectId);
+    })
+
+    socket.on("disconnect", ()=> {
+        console.log("Socket disconnected", socket.id);
+    })
 })
 
 const PORT = process.env.PORT || 3000;

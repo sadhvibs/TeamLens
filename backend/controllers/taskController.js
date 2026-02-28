@@ -26,6 +26,9 @@ const createTask = async (req, res) => {
             createdBy: req.user._id,
             dueDate
         })
+        const io = req.app.get("io");
+        io.emit("taskCreated", task);
+
         return res.status(201).json(task);
 
     } catch (error) {
@@ -33,4 +36,79 @@ const createTask = async (req, res) => {
     }
 }
 
-module.exports = { createTask };
+const getMyTasks = async (req, res) => {
+    try {
+        const tasks = await Task.find({ assignedTo: req.user._id })
+            .populate("project", "name")
+            .populate("createdBy", "name email")
+
+        return res.status(200).json(tasks);
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+}
+
+const updateTaskStatus = async (req, res) => {
+    try {
+        const { taskId } = req.params;
+        const { status } = req.body;
+        const task = await Task.findById(taskId);
+
+        if (!task) {
+            return res.staus(404).json({ message: "Task not found" });
+        }
+
+        //allowing only assigned user can update
+        if (task.assignedTo.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: "Not authorized to update this task" });
+        }
+
+        task.status = status;
+        await task.save();
+
+        const io = req.app.get("io");
+        io.to(projectId).emit("taskUpdated", task);
+
+        return res.status(200).json(task);
+
+    } catch (error) {
+        return res.status(500).json({ message: error.message })
+    }
+}
+
+const getTasksByProject = async (req, res) => {
+    try {
+        const { projectId } = req.params;
+        const tasks = await Task.find({ project: projectId })
+            .populate("assignedTo", "name email")
+            .populate("createdBy", "name")
+
+        return res.status(200).json(tasks);
+    } catch (error) {
+        return res.status(500).json({ message: error.message })
+    }
+}
+
+const deleteTask = async (req, res) => {
+    try {
+        const { id } = req.params;
+        console.log(id);
+        const task = await Task.findById(id);
+        console.log(task)
+        if (!task) {
+            res.status(404).json({ message: "Task not found" });
+        }
+
+        //only team-lead can delete
+        await task.deleteOne();
+
+        const io = req.app.get("io");
+        io.emit("taskDeleted", task)
+
+        return res.status(200).json({ message: "Task deleted successfully" });
+
+    } catch (error) {
+        return res.status(500).json({ message: error.message })
+    }
+}
+module.exports = { createTask, getMyTasks, updateTaskStatus, getTasksByProject, deleteTask };
