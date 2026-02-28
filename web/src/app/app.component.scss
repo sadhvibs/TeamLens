@@ -1,0 +1,22 @@
+.container {
+    display: flex;
+    flex-wrap: wrap;
+}
+a{
+    margin: 15px;
+}
+
+button {
+    background-color: rgb(14, 14, 132);
+    color: white;
+    padding: 10px 25px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+    transition: all 0.2s ease;
+}
+.component-wrapper{
+    margin-top: 40px;
+}

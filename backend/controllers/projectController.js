@@ -19,6 +19,31 @@ const createProject = async (req, res) => {
     }
 }
 
+const getProjects = async (req, res) => {
+    try {
+        let projects;
+
+        if (req.user.role === "TEAM_LEAD") {
+            projects = await Project.find({ createdBy: req.user._id });
+        } else {
+            projects = await Project.find({ members: req.user._id });
+        }
+
+        res.status(200).json(projects);
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+}
+
+const getProjectMembers = async (req, res) => {
+    try {
+        const users = await User.find({}, "name email role");
+        res.status(200).json(users);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
 const addMemberToProject = async (req, res) => {
     try {
         const { id } = req.params;
@@ -56,4 +81,5 @@ const addMemberToProject = async (req, res) => {
     }
 }
 
-module.exports = { createProject, addMemberToProject };
+
+module.exports = { createProject, getProjects, getProjectMembers, addMemberToProject };

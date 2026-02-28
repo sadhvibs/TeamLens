@@ -1,0 +1,38 @@
+<div class="main-container">
+    <mat-card>
+        <h2>REGISTER</h2>
+        <form class="registerform" [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+            <div>
+                <mat-form-field class="full-width">
+                    <mat-label>Name</mat-label>
+                    <input matInput formControlName="name" autocomplete="off" required>
+                </mat-form-field>
+            </div>
+            <div>
+                <mat-form-field class="full-width">
+                    <mat-label>Email</mat-label>
+                    <input matInput formControlName="email" autocomplete="off" required>
+                </mat-form-field>
+            </div>
+            <div>
+                <mat-form-field class="full-width">
+                    <mat-label>Password</mat-label>
+                    <input matInput formControlName="password" autocomplete="off" required>
+                </mat-form-field>
+            </div>
+            <div>
+                <mat-form-field class="full-width">
+                    <mat-label>Role</mat-label>
+                    <mat-select formControlName="role">
+                        <mat-option value="TEAM_LEAD">Team Lead</mat-option>
+                        <mat-option value="MEMBER">Member</mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div>
+
+            <div>
+                <button mat-raised-button color="primary" type="submit">Register</button>
+            </div>
+        </form>
+    </mat-card>
+</div>
