@@ -12,6 +12,9 @@ export class AllProjectsComponent {
   displayedColumns: string[] = ['title', 'description', 'createdBy'];
   dataSource = new MatTableDataSource<any>([]);
   project: any[] = [];
+  members: any[] = [];
+  teamlead: any;
+  userId: any;
 
   constructor(private projectService: ProjectService) { }
 
@@ -22,7 +25,23 @@ export class AllProjectsComponent {
   loadProjects() {
     this.projectService.getProjects().subscribe((res: any) => {
       this.project = res;
-      console.log(this.project)
+      console.log(this.project);
+      // this.userId = this.project.map(p => p.createdBy);
+      // console.log(this.userId)
+      this.projectService.getProjectMembers().subscribe((res: any) => {
+        this.members = res;
+        console.log(this.members);
+        this.project = this.project.map(proj => {
+          const teamLead = this.members.find(m => m._id === proj.createdBy);
+          console.log(teamLead)
+          return {
+            ...proj,
+            createdName: teamLead ? teamLead.name : 'N/A'
+          }
+        })
+      })
     });
+
+
   }
 }

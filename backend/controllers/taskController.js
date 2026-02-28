@@ -1,11 +1,13 @@
 const User = require("../models/Users");
 const Project = require("../models/Projects");
 const Task = require("../models/Task");
+const { logActivity } = require("../services/activityService");
 
 const createTask = async (req, res) => {
-    try {
-        const { title, description, project, assignedTo, dueDate } = req.body;
 
+    const { title, description, project, assignedTo, dueDate } = req.body;
+
+    try {
         //check project exists
         const projectId = await Project.findById(project);
         if (!projectId) {
@@ -26,6 +28,13 @@ const createTask = async (req, res) => {
             createdBy: req.user._id,
             dueDate
         })
+
+        await logActivity({
+            userId: req.user._id,
+            action: 'Created Task',
+            taskId: task._id,
+            projectId: project
+        });
         const io = req.app.get("io");
         io.emit("taskCreated", task);
 
@@ -49,9 +58,10 @@ const getMyTasks = async (req, res) => {
 }
 
 const updateTaskStatus = async (req, res) => {
+    const { status } = req.body;
     try {
         const { taskId } = req.params;
-        const { status } = req.body;
+
         const task = await Task.findById(taskId);
 
         if (!task) {
@@ -66,8 +76,16 @@ const updateTaskStatus = async (req, res) => {
         task.status = status;
         await task.save();
 
-        const io = req.app.get("io");
-        io.to(projectId).emit("taskUpdated", task);
+        // Log activity
+        await logActivity({
+            userId: req.user._id,
+            action: `Updated Task Status to ${status}`,
+            taskId: task._id,
+            projectId: task.project
+        });
+
+        const io = req.app.get('io');
+        io.emit('taskUpdated', { taskId: task._id, status, projectId: task.project });
 
         return res.status(200).json(task);
 
@@ -92,9 +110,8 @@ const getTasksByProject = async (req, res) => {
 const deleteTask = async (req, res) => {
     try {
         const { id } = req.params;
-        console.log(id);
         const task = await Task.findById(id);
-        console.log(task)
+
         if (!task) {
             res.status(404).json({ message: "Task not found" });
         }
@@ -111,4 +128,28 @@ const deleteTask = async (req, res) => {
         return res.status(500).json({ message: error.message })
     }
 }
+
+exports.assignTask = async (req, res) => {
+    const { assignedTo } = req.body;
+
+    try {
+        const task = await Task.findById(req.params.id);
+        if (!task) return res.status(404).json({ message: 'Task not found' });
+
+        task.assignedTo = assignedTo;
+        await task.save();
+
+        // Log activity
+        await logActivity({
+            userId: req.user._id,
+            action: `Assigned Task to User ${assignedTo}`,
+            taskId: task._id,
+            projectId: task.project
+        });
+
+        res.status(200).json(task);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
 module.exports = { createTask, getMyTasks, updateTaskStatus, getTasksByProject, deleteTask };
